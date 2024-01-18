@@ -50,7 +50,6 @@ class Wikiss13(commands.Cog):
             "api_path": "/w/api.php",
             "server_image": None,
             "server_name": None,
-            "article_path": "/wiki"
         }
 
         self.config.register_guild(**default_guild)
@@ -145,21 +144,6 @@ class Wikiss13(commands.Cog):
         except (ValueError, KeyError, AttributeError) as e:
             await ctx.send(
                 "Exception raised when setting the server image."
-            )
-            raise e
-        
-    @wikiss13_config.command()
-    async def set_article_path(self, ctx, text):
-        """
-        Set the article path.
-        """
-
-        try:
-            await self.config.guild(ctx.guild).article_path.set(text)
-            await ctx.send(f"Article path set to {text}.")
-        except (ValueError, KeyError, AttributeError) as e:
-            await ctx.send(
-                "Exception raised when setting the article path."
             )
             raise e
 
@@ -282,8 +266,6 @@ class Wikiss13(commands.Cog):
         server_name = await self.config.guild(ctx.guild).server_name()
         server_image = await self.config.guild(ctx.guild).server_image()
 
-        article_path = await self.config.guild(ctx.guild).article_path()
-
         page_text = None
         async with session.get(
             wiki_url + api_path,
@@ -337,7 +319,7 @@ class Wikiss13(commands.Cog):
             text = re.sub(r"<div class=\"tabs-label\" tabindex=\"-1\">(?:.*?)ecret(?:.*?)</div><menu class=\"tabs-content\" style=\"\">(.*?)</menu></div>", r"||\1||", text)
             text = re.sub(
                 r'<a[^>]*?href="(/.*?)"[^>]*?>(.*?)</a>',
-                r"[\2](" + article_path + r"\1)",
+                r"[\2](" + wiki_url + r"\1)",
                 text,
             )
             text = re.sub(
