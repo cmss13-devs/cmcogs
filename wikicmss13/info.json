@@ -1,0 +1,17 @@
+{
+    "name": "WikiSS13",
+    "author": [
+        "PhasecoreX (PhasecoreX#0635)",
+        "pali (pali#0439)",
+        "harryob"
+    ],
+    "short": "Look up articles on a MediaWiki instance.",
+    "description": "Allows for looking up terms on a MediaWiki instance, and having the results displayed in chat. Fork of https://github.com/goonstation/gooncogs/tree/main/wikiss13 to allow a configured wiki, which is a fork of https://github.com/PhasecoreX/PCXCogs/tree/master/wikipedia that has been mutilated to work with a different wiki.",
+    "requirements": ["python-dateutil", "Levenshtein"],
+    "tags": [
+        "utility",
+        "wiki",
+        "ss13"
+    ],
+    "end_user_data_statement": "This cog does not persistently store data or metadata about users."
+}

@@ -1,0 +1,9 @@
+{
+    "author" : ["harryob"],
+    "install_msg" : "CM-SS13 Cogs",
+    "name" : "cmcogs",
+    "short" : "cmcogs",
+    "requirements": [],
+    "description" : "Cogs for CM-SS13, a fork of SS13",
+    "tags" : ["Fun", "SS13", "Utility", "Administration"]
+}
