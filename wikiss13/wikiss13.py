@@ -47,7 +47,10 @@ class Wikiss13(commands.Cog):
 
         default_guild = {
             "wiki_url": None,
-            "api_path": None
+            "api_path": "/w/api.php",
+            "server_image": None,
+            "server_name": None,
+            "article_path": "/wiki"
         }
 
         self.config.register_guild(**default_guild)
@@ -79,13 +82,13 @@ class Wikiss13(commands.Cog):
     @commands.guild_only()
     @commands.group()
     @checks.mod_or_permissions(administrator=True)
-    async def config(self, ctx):
+    async def wikiss13_config(self, ctx):
         """
         Configure WikiSS13
         """
         pass
 
-    @config.command()
+    @wikiss13_config.command()
     async def set_wiki_url(self, ctx, text):
         """
         Set the URL of the wiki you want to connect to.
@@ -96,11 +99,11 @@ class Wikiss13(commands.Cog):
             await ctx.send(f"Wiki set to {text}.")
         except (ValueError, KeyError, AttributeError) as e:
             await ctx.send(
-                "Exception raised when setting the channel."
+                "Exception raised when setting the wiki URL."
             )
             raise e
 
-    @config.command()
+    @wikiss13_config.command()
     async def set_api_path(self, ctx, text):
         """
         Set the API path.
@@ -108,10 +111,55 @@ class Wikiss13(commands.Cog):
 
         try:
             await self.config.guild(ctx.guild).api_path.set(text)
-            await ctx.send(f"Wiki set to {text}.")
+            await ctx.send(f"API path set to {text}.")
         except (ValueError, KeyError, AttributeError) as e:
             await ctx.send(
-                "Exception raised when setting the channel."
+                "Exception raised when setting the API path."
+            )
+            raise e
+
+    @wikiss13_config.command()
+    async def set_server_name(self, ctx, text):
+        """
+        Set the server name. 
+        """
+
+        try:
+            await self.config.guild(ctx.guild).server_name.set(text)
+            await ctx.send(f"Server name set to {text}.")
+        except (ValueError, KeyError, AttributeError) as e:
+            await ctx.send(
+                "Exception raised when setting the server name."
+            )
+            raise e
+
+    @wikiss13_config.command()
+    async def set_server_image(self, ctx, text):
+        """
+        Set the server image.
+        """
+
+        try:
+            await self.config.guild(ctx.guild).server_image.set(text)
+            await ctx.send(f"Server image set to {text}.")
+        except (ValueError, KeyError, AttributeError) as e:
+            await ctx.send(
+                "Exception raised when setting the server image."
+            )
+            raise e
+        
+    @wikiss13_config.command()
+    async def set_article_path(self, ctx, text):
+        """
+        Set the article path.
+        """
+
+        try:
+            await self.config.guild(ctx.guild).article_path.set(text)
+            await ctx.send(f"Article path set to {text}.")
+        except (ValueError, KeyError, AttributeError) as e:
+            await ctx.send(
+                "Exception raised when setting the article path."
             )
             raise e
 
@@ -120,7 +168,8 @@ class Wikiss13(commands.Cog):
         """Get information from the configured wiki."""
         async with ctx.typing():
             wiki_url = await self.config.guild(ctx.guild).wiki_url()
-            api_path = await self.config.guild(ctx.guild).api_url()
+            api_path = await self.config.guild(ctx.guild).api_path()
+
             payload = self.generate_payload(query)
             async with aiohttp.ClientSession() as session:
                 async with session.get(
@@ -180,7 +229,7 @@ class Wikiss13(commands.Cog):
                                 )
                             )
                             return
-                        embed_tasks.append(self.generate_embed(page, session, wiki_url, api_path))
+                        embed_tasks.append(self.generate_embed(page, session, ctx))
                         if not ctx.channel.permissions_for(ctx.me).add_reactions:
                             break  # Menu can't function so only show first result
                 embeds = await asyncio.gather(*embed_tasks, return_exceptions=True)
@@ -199,7 +248,7 @@ class Wikiss13(commands.Cog):
                 embed.set_author(name=f"Result {count} of {len(embeds)}")
             await menu(ctx, embeds, DEFAULT_CONTROLS, timeout=60.0)
 
-    def generate_payload(self, query: str, wiki_url: str):
+    def generate_payload(self, query: str):
         """Generate the payload for Goonstation Wiki based on a query string."""
         query_tokens = query.split()
         payload = {
@@ -223,9 +272,17 @@ class Wikiss13(commands.Cog):
         }
         return payload
 
-    async def generate_embed(self, page_json, session, wiki_url, api_path):
+    async def generate_embed(self, page_json, session, ctx):
         """Generate the embed for the json page."""
         title = page_json["title"]
+
+        wiki_url = await self.config.guild(ctx.guild).wiki_url()
+        api_path = await self.config.guild(ctx.guild).api_path()
+
+        server_name = await self.config.guild(ctx.guild).server_name()
+        server_image = await self.config.guild(ctx.guild).server_image()
+
+        article_path = await self.config.guild(ctx.guild).article_path()
 
         page_text = None
         async with session.get(
@@ -280,7 +337,7 @@ class Wikiss13(commands.Cog):
             text = re.sub(r"<div class=\"tabs-label\" tabindex=\"-1\">(?:.*?)ecret(?:.*?)</div><menu class=\"tabs-content\" style=\"\">(.*?)</menu></div>", r"||\1||", text)
             text = re.sub(
                 r'<a[^>]*?href="(/.*?)"[^>]*?>(.*?)</a>',
-                r"[\2](https://wiki.ss13.co\1)",
+                r"[\2](" + article_path + r"\1)",
                 text,
             )
             text = re.sub(
@@ -358,11 +415,11 @@ class Wikiss13(commands.Cog):
         )
         if image:
             embed.set_image(url=image)
-        text = "Information provided by Goonstation"
+        text = f"Information provided by {server_name}"
         if timestamp:
             text += f"\nArticle last updated"
         embed.set_footer(
             text=text,
-            icon_url=("https://wiki.ss13.co/favicon.ico"),
+            icon_url=(server_image),
         )
         return embed
